@@ -9,7 +9,8 @@ import Loader from "../components/Loader";
 import { 
     useGetOrderDetailsQuery, 
     useGetPaypalClientIdQuery,
-    usePayOrderMutation
+    usePayOrderMutation,
+    useDeliverOrderMutation
 } from "../slices/ordersApiSlice";
 
 const OrderScreen = () => {
@@ -26,6 +27,8 @@ const OrderScreen = () => {
    const [payOrder, {isLoading:loadingPay}] = usePayOrderMutation();
 
    const {userInfo} = useSelector((state) => state.auth);
+
+   const [deliverOrder, {isLoading:loadingDeliver}] = useDeliverOrderMutation();
 
    const [{isPending}, paypalDispatch] = usePayPalScriptReducer();
 
@@ -89,6 +92,16 @@ const OrderScreen = () => {
     }).then((orderId) => {
         return orderId;
     });
+   }
+
+   const deliverHandler = async () => {
+    try {
+        await deliverOrder(orderId);
+        refetch();
+        toast.success("Order Delivered");
+    } catch (err) {
+        toast.error(err?.data?.message || err.error);
+    }
    }
 
    return(
@@ -203,6 +216,19 @@ const OrderScreen = () => {
                                             </div>
                                         </div>
                                     )}
+                                </ListGroup.Item>
+                            )}
+
+                            {loadingDeliver && <Loader />}
+                            {userInfo && userInfo.isAdmin && order.isPaid && !order.isDelivered && (
+                                <ListGroup.Item>
+                                    <Button
+                                        type="button"
+                                        className="btn btn-block"
+                                        onClick={deliverHandler}
+                                    >
+                                        Mark As Delivered
+                                    </Button>
                                 </ListGroup.Item>
                             )}
                         </ListGroup>
